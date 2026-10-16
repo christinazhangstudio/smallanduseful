@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smallanduseful
+  namespace: default
+  labels:
+    app.kubernetes.io/name: smallanduseful
+    app.kubernetes.io/part-of: smallanduseful
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: smallanduseful
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: smallanduseful
+        app.kubernetes.io/part-of: smallanduseful
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: web
+          image: docker.io/czhang19/christina:smallanduseful
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: ORIGIN
+              value: https://smallanduseful.lystic.dev
+            - name: MONGODB_URI
+              value: mongodb://mongodb.default.svc.cluster.local:27017
+            - name: SELF_HOSTED_AI_CHAT_COMPLETIONS_URL
+              value: http://192.168.1.157:8080/v1/chat/completions
+            - name: SELF_HOSTED_AI_CHAT_COMPLETIONS_MODEL
+              value: qwen
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smallanduseful
+  namespace: default
+  labels:
+    app.kubernetes.io/name: smallanduseful
+    app.kubernetes.io/part-of: smallanduseful
+spec:
+  selector:
+    app.kubernetes.io/name: smallanduseful
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smallanduseful
+  namespace: default
+  labels:
+    app.kubernetes.io/name: smallanduseful
+    app.kubernetes.io/part-of: smallanduseful
+  annotations:
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "130"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: smallanduseful.lystic.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: smallanduseful
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - smallanduseful.lystic.dev
+      secretName: lystic-wildcard-tls

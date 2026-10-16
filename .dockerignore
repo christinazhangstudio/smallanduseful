@@ -1,0 +1,9 @@
+node_modules
+.svelte-kit
+build
+.git
+.DS_Store
+npm-debug.log*
+.env
+.env.*
+mobile

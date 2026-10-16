@@ -1,0 +1,59 @@
+:root {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+	color: #463c34;
+	background: #dccbb6;
+	font-synthesis: none;
+	--ink: #463c34;
+	--muted: #685e53;
+	--paper: #e6d8c4;
+	--line: #cbbba6;
+	--accent: #907068;
+	--accent-dark: #7b645b;
+	--on-accent: #f3eadf;
+	--zh: 0.72em;
+}
+
+* {
+	box-sizing: border-box;
+}
+html {
+	background: #dccbb6;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	min-height: 100dvh;
+}
+
+button,
+input,
+textarea {
+	font: inherit;
+}
+
+button,
+label {
+	-webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible,
+[role='button']:focus-visible {
+	outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+	outline-offset: 3px;
+}
+
+::selection {
+	color: var(--on-accent);
+	background: var(--accent);
+}
+[lang='zh-Hans'] {
+	color: var(--muted);
+	font-size: var(--zh);
+	font-weight: 500;
+	letter-spacing: 0;
+	line-height: 1.35;
+	text-transform: none;
+}
